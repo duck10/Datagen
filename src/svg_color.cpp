@@ -21,11 +21,11 @@ void SVG_Color_Output(
     const std::vector<std::pair<Vector_3,std::string> > & points )
 //---------------------------------------------------------------------
 {
-    const long sqSide = (long)(2.1 * picSize);
+    const long sqSide = (long)(3. * picSize);
     fprintf( stdout, "<?xml version=\"1.0\" standalone=\"no\"?>\n");
     fprintf( stdout, "<svg width=\"%ld\" height=\"%ld\" version=\"1.1\"\n", sqSide, sqSide);
     fprintf( stdout, "xmlns=\"http://www.w3.org/2000/svg\">\n");
-    fprintf( stdout, "<rect width=\"%ld\" height=\"%ld\" style=\"fill:rgb(255,255,255); stroke-width:10;  stroke:rgb(255,255,255)\"/>\n",
+    fprintf( stdout, "<rect width=\"%ld\" height=\"%ld\" style=\"fill:rgb(255,255,255); stroke-width:10;  stroke:rgb(0,0,0)\"/>\n",
         sqSide, sqSide);
 
 
@@ -41,18 +41,22 @@ void SVG_Color_Output(
        miny = MIN(miny,points[i].first[1]);
     }
 
-    const double scale = MAX( (maxx-minx), (maxy-miny) ) / picSize;
+    const double scale = MAX( (maxx-minx), (maxy-miny) ) / (2.0*picSize);
+    const double xcenter = (maxx + minx) / 2.0;
+    const double ycenter = (maxy + miny) / 2.0;
+    const double xPicCenter = sqSide / 2.0;
+    const double yPicCenter = sqSide / 2.0;
 
     for( unsigned int i=0; i<points.size( ); ++i )
     {
-        const int r = 2;
-        const double xd = (points[i].first[0]-minx)/scale;
-        const double yd = (points[i].first[1]-miny)/scale;
-        const int x = int( sign_t(xd)*xd );
-        const int y = int( sign_t(yd)*yd );
-        const std::string& color = points[i].second;
-        fprintf( stdout, "<circle r=\"%d\" cx=\"%d\" cy=\"%d\" stroke=\"#%s\" stroke-width=\"2\" fill=\"#%s\"/>\n",
-            r, x, y, color.c_str(), color.c_str());
+       const int radius = 2;
+       const double xd = (points[i].first[0] - xcenter) / scale - xPicCenter;
+       const double yd = (points[i].first[1] - ycenter) / scale - yPicCenter;
+       const int x = -int(xd);
+       const int y = -int(yd);
+       const std::string& color = points[i].second;
+       fprintf(stdout, "<circle r=\"%d\" cx=\"%d\" cy=\"%d\" stroke=\"#%s\" stroke-width=\"2\" fill=\"#%s\"/>\n",
+          radius, x, y, color.c_str(), color.c_str());
     }
 
     fprintf( stdout, "</svg>\n");

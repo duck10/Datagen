@@ -7,17 +7,11 @@
 *.opendb
 *.db-shm
 *.db-wal
-*.json
-*.sqlite
 *.ipch
 *.tlog
 *.log
 *.obj
-*.idb
-*.pdb
 *.exe
 *.ilk
 *.iobj
 *.lib
-*.ipdb
-*.suo
