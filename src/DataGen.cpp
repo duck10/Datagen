@@ -18,6 +18,8 @@
 
     2018-12-17
     "CIRCLE", 1    // points to divide a unit circle in xy plane into n divisions
+    2018-12-30
+    "LINE", 1      // n points in 0-1 along x, y and z = 0;
 */
 //
 
@@ -549,19 +551,34 @@ std::vector<vecN> BOX_Gen( const int dim, const int nPoints )
     return( vout );
 }
 
-std::vector<vecN> CIRCLE_Gen( const int nDivisions)
+std::vector<vecN> CIRCLE_Gen(const int nDivisions)
 {
-    vecN v(3);
-    v[2] = 0.0;
-    std::vector<vecN> vout;
-    const double incrementalAngle = 8.0*atan(1.0) / nDivisions;
-    for (int ipt = 0; ipt < nDivisions + 1; ++ipt)
-    {
-        v[0] = cos(ipt*incrementalAngle);
-        v[1] = sin(ipt*incrementalAngle);
-        vout.push_back(v);
-    }
-    return vout;
+   vecN v(3);
+   v[2] = 0.0;
+   std::vector<vecN> vout;
+   const double incrementalAngle = 8.0*atan(1.0) / nDivisions;
+   for (int ipt = 0; ipt < nDivisions + 1; ++ipt)
+   {
+      v[0] = cos(ipt*incrementalAngle);
+      v[1] = sin(ipt*incrementalAngle);
+      vout.push_back(v);
+   }
+   return vout;
+}
+
+std::vector<vecN> LINE_Gen(const int nPoints)
+{
+   vecN v(3);
+   v[2] = 0.0;
+   std::vector<vecN> vout;
+   const double delta = 1.0 / double(nPoints - 1);
+   for (int ipt = 0; ipt < nPoints; ++ipt)
+   {
+      v[0] = ipt*delta;
+      v[1] = v[2] = 0.0;
+      vout.push_back(v);
+   }
+   return vout;
 }
 
 
@@ -585,6 +602,7 @@ int main(int argc, char* argv[])
     theMap.insert( std::make_pair( "CLOUD",3) );  // m=cloud points per level, n levels, relative cloud spacing
                                                   // number of points = m^n
     theMap.insert(std::make_pair("CIRCLE", 1));   // points to divide a unit circle into n divisions
+    theMap.insert(std::make_pair("LINE", 1));   // n points in 0-1
 
     std::string cmd;
     std::vector<double> vArgs;
@@ -816,7 +834,11 @@ int main(int argc, char* argv[])
     }
     else if (cmd == "CIRCLE")
     { // points to divide a unit circle in xy plane into n divisions
-        WriteVectorFile(CIRCLE_Gen(int(vArgs[0])));
+    WriteVectorFile(CIRCLE_Gen(int(vArgs[0])));
+    }
+    else if (cmd == "LINE")
+    { // points to create n equally spaced points in 0-1
+       WriteVectorFile(LINE_Gen(int(vArgs[0])));
     }
     else
     {

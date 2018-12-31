@@ -49,6 +49,26 @@ std::vector<Vector_3> ReadVector_3File( std::istream& str )
     return( v );
 }
 
+std::vector<std::pair< Vector_3, std::string> > ReadXYColor( std::istream& str) {
+   std::vector<std::pair<Vector_3,std::string> > v;
+
+   while (!str.fail() && !str.eof())
+   {
+      std::string line;
+      getline(str, line, '\n');
+      if (!str.fail() && !str.eof())
+      {
+         std::vector<std::string> vs = GetNextLine(line);
+         if (vs.size() >2) {
+            const Vector_3 v1(atof(vs[0].c_str()), atof(vs[1].c_str()), 0);
+            const std::string color = vs[2].c_str();
+            v.push_back(std::make_pair(v1, color));
+         }
+      }
+   }
+   return(v);
+}
+
 /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 std::vector<vecN> ReadGeneralFile( std::istream& str )
 //---------------------------------------------------------------------
