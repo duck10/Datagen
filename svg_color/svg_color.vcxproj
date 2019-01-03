@@ -19,10 +19,12 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\src\CividisScaleSVG.cpp" />
     <ClCompile Include="..\src\Data2CSV.cpp" />
     <ClCompile Include="..\src\svg_color.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\src\CividisScaleSVG.h" />
     <ClInclude Include="..\src\Data2CSV.h" />
     <ClInclude Include="..\src\TNear.h" />
   </ItemGroup>

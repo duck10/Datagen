@@ -17,12 +17,18 @@
     <ClCompile Include="..\src\svg_color.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\CividisScaleSVG.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\Data2CSV.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\src\TNear.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\CividisScaleSVG.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

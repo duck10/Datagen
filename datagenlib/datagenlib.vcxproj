@@ -19,12 +19,14 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\src\CividisScaleSVG.cpp" />
     <ClCompile Include="..\src\cqrlib.c" />
     <ClCompile Include="..\src\geodesic.cpp" />
     <ClCompile Include="..\src\hammersley.cpp" />
     <ClCompile Include="..\src\vector_3d.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\src\CividisScaleSVG.h" />
     <ClInclude Include="..\src\cqrlib.h" />
     <ClInclude Include="..\src\geodesic.h" />
     <ClInclude Include="..\src\hammersley.h" />

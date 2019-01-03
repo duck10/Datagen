@@ -1,4 +1,4 @@
-// svg.cpp
+// svg_color.cpp
 //
 // svg reads from standard input and writes to standard output. It writes
 // an svg file for displaying the data set (input as a n-space vector in
@@ -9,58 +9,173 @@
 // sets for NearTree.
 //
 
-#include <vector>
+#include <algorithm>
+#include <cfloat>
 #include <iostream>
+#include <sstream>
+#include <vector>
 
+#include "CividisScaleSVG.h"
 #include "Data2CSV.h"
 #include "vector_3d.h"
 
+void OutputComments( const std::vector<std::string>& comments) {
+
+   if (!comments.empty()) {
+      fprintf(stdout, "<!--\n");
+      for (unsigned long i = 0; i < comments.size(); ++i)
+         fprintf(stdout, "# %s\n", comments[i].c_str());
+      fprintf(stdout, "-->\n");
+   }
+}
+
+void OutputData(
+   const std::vector<std::pair<Vector_3, std::string> > & points, 
+   const long sqSide, 
+   const long picSize) {
+
+   double maxx = -DBL_MAX;
+   double minx = DBL_MAX;
+   double maxy = -DBL_MAX;
+   double miny = DBL_MAX;
+   for (unsigned int i = 0; i < points.size(); ++i)
+   {
+      maxx = MAX(maxx, points[i].first[0]);
+      maxy = MAX(maxy, points[i].first[1]);
+      minx = MIN(minx, points[i].first[0]);
+      miny = MIN(miny, points[i].first[1]);
+   }
+
+   const double scale = MAX((maxx - minx), (maxy - miny)) / (2.0*picSize);
+   const double xcenter = (maxx + minx) / 2.0;
+   const double ycenter = (maxy + miny) / 2.0;
+   const double xPicCenter = sqSide / 2.0;
+   const double yPicCenter = sqSide / 2.0;
+
+   for (unsigned int i = 0; i < points.size(); ++i)
+   {
+      const int radius = 2;
+      const double xd = (points[i].first[0] - xcenter) / scale - xPicCenter;
+      const double yd = (points[i].first[1] - ycenter) / scale - yPicCenter;
+      const double zd = (points[i].first[2] - ycenter) / scale - yPicCenter;
+      const int x = -int(xd);
+      const int y = -int(yd);
+      const std::string& color = points[i].second;
+      fprintf(stdout, "<circle r=\"%d\" cx=\"%d\" cy=\"%d\" stroke=\"%s\" stroke-width=\"2\" fill=\"%s\"/>\n",
+         radius, x, y, color.c_str(), color.c_str());
+   }
+}
+
+double GetRadius(const std::vector<std::string>& comments) {
+   unsigned long i;
+   double radius = DBL_MAX;
+   for (i = 0; i < comments.size(); ++i)
+      if (comments[i].find("Radius") != std::string::npos) {
+         std::istringstream istr(comments[i]);
+         std::string s;
+         for (unsigned long i = 0; i < 4; ++i) istr >> s;
+         istr >> radius;
+         break;
+      }
+   return radius;
+}
+
+double GetMinValue(const std::vector<std::string>& comments) {
+   unsigned long i;
+   double minbest;
+   for (i = 0; i < comments.size(); ++i)
+      if (comments[i].find("min") != std::string::npos) {
+         std::istringstream istr(comments[i]);
+         std::string s;
+         for (unsigned long i = 0; i < 5; ++i) istr >> s;
+         istr >> minbest;
+         break;
+      }
+   return minbest;
+}
+
+double GetMaxValue(const std::vector<std::string>& comments) {
+   unsigned long i;
+   double maxbest;
+   for (i = 0; i < comments.size(); ++i) {
+      std::string s = comments[i];
+      if (s.find("max") != std::string::npos) {
+         std::string stemp;
+         std::istringstream istr(s);
+         for (unsigned long i = 0; i < 5; ++i) istr >> stemp;
+         istr >> maxbest;
+         break;
+      }
+   }
+   return maxbest;
+}
+
+/*
+   std::cout << "# Title Delone variety and input centering " << deloneVariety << "  "  << latticeCentering << std::endl;
+   std::cout << "# Radius of confusion " << radius << std::endl;
+   std::cout << "# min/max best Sella values " << minbest << "  " << maxbest << std::endl;
+*/
+
+std::string  GetType(const std::vector<std::string>& comments) {
+   unsigned long i;
+   std::string type;
+   std::string centering;
+   for ( i=0; i<comments.size(); ++i )
+      if (comments[i].find( "Delone") != std::string::npos) {
+         std::string s;
+         std::istringstream istr(comments[i]);
+         for (unsigned long i = 0; i < 7; ++i) istr >> s;
+         istr >> type;
+         istr >> centering;
+         break;
+      }
+   return type+" "+centering;
+}
+
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 void SVG_Color_Output(
-    const long picSize,
-    const std::vector<std::pair<Vector_3,std::string> > & points )
-//---------------------------------------------------------------------
+   const long picSize,
+   const std::vector<std::pair<Vector_3, std::string> > & points,
+   std::vector<double>& distances,
+   std::vector<std::string> comments)
+   //---------------------------------------------------------------------
 {
-    const long sqSide = (long)(3. * picSize);
-    fprintf( stdout, "<?xml version=\"1.0\" standalone=\"no\"?>\n");
-    fprintf( stdout, "<svg width=\"%ld\" height=\"%ld\" version=\"1.1\"\n", sqSide, sqSide);
-    fprintf( stdout, "xmlns=\"http://www.w3.org/2000/svg\">\n");
-    fprintf( stdout, "<rect width=\"%ld\" height=\"%ld\" style=\"fill:rgb(255,255,255); stroke-width:10;  stroke:rgb(0,0,0)\"/>\n",
-        sqSide, sqSide);
+   const double radius = GetRadius(comments);
+   const std::string deloneType = GetType(comments);
+   const long sqSide = (long)(3. * picSize);
+   fprintf(stdout, "<?xml version=\"1.0\" standalone=\"no\"?>\n");
+   fprintf(stdout, "<svg width=\"%ld\" height=\"%ld\" version=\"1.1\"\n", sqSide, sqSide);
+   fprintf(stdout, "xmlns=\"http://www.w3.org/2000/svg\">\n");
+   fprintf(stdout, "<rect width=\"%ld\" height=\"%ld\" style=\"fill:lightgrey; stroke-width:10;  stroke:rgb(0,0,0)\"/>\n",
+      sqSide, sqSide);
+
+   OutputComments(comments);
+   OutputData(points, sqSide, picSize);
+   const std::string cividisscale = Cividis::CividisScaleSVG(sqSide, 3);
+   fprintf(stdout, "%s", cividisscale.c_str());
 
 
-    double maxx = -DBL_MAX;
-    double minx = DBL_MAX;
-    double maxy = -DBL_MAX;
-    double miny = DBL_MAX;
-    for( unsigned int i=0; i<points.size( ); ++i )
-    {
-       maxx = MAX(maxx,points[i].first[0]);
-       maxy = MAX(maxy,points[i].first[1]);
-       minx = MIN(minx,points[i].first[0]);
-       miny = MIN(miny,points[i].first[1]);
-    }
+   fprintf(stdout, "<text x=\"20\" y=\"80\" font-family=\"sans-serif\" font-size=\"60\"> %s </text>\n", deloneType.c_str());
 
-    const double scale = MAX( (maxx-minx), (maxy-miny) ) / (2.0*picSize);
-    const double xcenter = (maxx + minx) / 2.0;
-    const double ycenter = (maxy + miny) / 2.0;
-    const double xPicCenter = sqSide / 2.0;
-    const double yPicCenter = sqSide / 2.0;
+   fprintf(stdout,
+      "<text x=\"90\" y=\"1490\"   font-family=\"sans-serif\" font-size=\"40\" fill=\"black\"> %f  </text>\n", *std::min_element(distances.begin(), distances.end()));
+   fprintf(stdout,
+      "<text x=\"90\" y=\"995\"   font-family=\"sans-serif\" font-size=\"40\" fill=\"black\"> %f  </text>\n", *std::max_element(distances.begin(), distances.end()));
 
-    for( unsigned int i=0; i<points.size( ); ++i )
-    {
-       const int radius = 2;
-       const double xd = (points[i].first[0] - xcenter) / scale - xPicCenter;
-       const double yd = (points[i].first[1] - ycenter) / scale - yPicCenter;
-       const int x = -int(xd);
-       const int y = -int(yd);
-       const std::string& color = points[i].second;
-       fprintf(stdout, "<circle r=\"%d\" cx=\"%d\" cy=\"%d\" stroke=\"#%s\" stroke-width=\"2\" fill=\"#%s\"/>\n",
-          radius, x, y, color.c_str(), color.c_str());
-    }
-
-    fprintf( stdout, "</svg>\n");
+   fprintf(stdout, "</svg>\n");
 }
+
+void SetColors(std::vector<std::pair< Vector_3, std::string> >& v,
+   const std::vector<double>& distances) {
+   const double minvalue = *std::min_element(distances.begin(), distances.end());
+   const double maxvalue = *std::max_element(distances.begin(), distances.end());
+   ColorRange cr(minvalue, maxvalue);
+
+   for ( unsigned long i=0; i<v.size(); ++i ) {
+      v[i].second = Cividis::OrdinalToCividisHexString(cr.ColorIndex(distances[i]));
+   }
+}
+
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 int main(int argc, char* argv[])
@@ -73,9 +188,14 @@ int main(int argc, char* argv[])
 
     if ( scale <= 0.0 ) scale = 500.0;
 
-    std::vector<std::pair< Vector_3, std::string> > v =ReadXYColor( std::cin );
+    std::vector<std::pair< Vector_3, std::string> > v;
+    std::vector<std::string> comments;
+    std::vector<double> distances;
+    ReadXYZColor(std::cin, v, distances, comments);
 
-    SVG_Color_Output( (long)scale, v );
+    SetColors(v, distances);
+
+    SVG_Color_Output( (long)scale, v, distances, comments );
 
     return 0;}
 

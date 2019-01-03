@@ -53,7 +53,12 @@ std::vector<std::string> GetNextLine( std::string& line );
 
 std::vector<Vector_3> ReadVector_3File( std::istream& str );
 
-std::vector < std::pair< Vector_3, std::string> > ReadXYColor(std::istream& str);
+void ReadXYZColor(
+   std::istream& str,
+   std::vector<std::pair<Vector_3, 
+   std::string> >& v,
+   std::vector<double>& distances,
+   std::vector<std::string>& comments);
 
 void WriteVector_3File( const std::vector<Vector_3>& v );
 
